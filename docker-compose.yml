@@ -1,0 +1,81 @@
+services:
+  users-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_DB: users
+    volumes:
+      - users-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d users"]
+      interval: 5s
+      retries: 10
+
+  books-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_DB: books
+    volumes:
+      - books-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d books"]
+      interval: 5s
+      retries: 10
+
+  loans-db:
+    image: mongo:7
+    volumes:
+      - loans-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      retries: 10
+
+  users-service:
+    build: ./users-service
+    environment:
+      DATABASE_URL: postgres://app:${PG_PASSWORD}@users-db:5432/users
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    depends_on:
+      users-db:
+        condition: service_healthy
+
+  books-service:
+    build: ./books-service
+    environment:
+      DATABASE_URL: postgres://app:${PG_PASSWORD}@books-db:5432/books
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      books-db:
+        condition: service_healthy
+
+  loans-service:
+    build: ./loans-service
+    environment:
+      MONGO_URL: mongodb://loans-db:27017/loans
+      BOOKS_URL: http://books-service:3002
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      loans-db:
+        condition: service_healthy
+      books-service:
+        condition: service_started
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - users-service
+      - books-service
+      - loans-service
+
+volumes:
+  users-data:
+  books-data:
+  loans-data:
