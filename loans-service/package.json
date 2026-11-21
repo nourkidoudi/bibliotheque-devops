@@ -29,7 +29,7 @@
     "morgan": "^1.10.0",
     "node-cron": "^3.0.3",
     "prom-client": "^15.1.2",
-    "uuid": "^9.0.1",
+    "uuid": "^14.0.3",
     "opossum": "^8.1.4"
   },
   "devDependencies": {
