@@ -1,0 +1,35 @@
+version: '3.8'
+
+# Development override with source live mounting & hot-reload
+services:
+  users-service:
+    command: npm run dev
+    volumes:
+      - ./users-service:/app
+      - /app/node_modules
+    environment:
+      NODE_ENV: development
+
+  books-service:
+    command: npm run dev
+    volumes:
+      - ./books-service:/app
+      - /app/node_modules
+    environment:
+      NODE_ENV: development
+
+  loans-service:
+    command: npm run dev
+    volumes:
+      - ./loans-service:/app
+      - /app/node_modules
+    environment:
+      NODE_ENV: development
+
+  frontend:
+    ports:
+      - "5173:5173"
+    command: npm run dev -- --host
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules

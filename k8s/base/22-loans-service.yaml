@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loans-service
+  namespace: library
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: loans-service}
+  template:
+    metadata:
+      labels: {app: loans-service}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3003"
+        prometheus.io/path: /metrics
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        fsGroup: 1001
+      containers:
+        - name: loans-service
+          image: REGISTRY/loans-service:TAG   # remplacé par la CI / ArgoCD (ex. nourkidoudi/loans-service:<sha>)
+          imagePullPolicy: IfNotPresent
+          ports: [{containerPort: 3003}]
+          envFrom:
+            - configMapRef: {name: library-config}
+          env:
+            - {name: PORT, value: "3003"}
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom: {secretKeyRef: {name: library-secrets, key: MONGO_INITDB_ROOT_PASSWORD}}
+            - name: MONGODB_URI
+              value: "mongodb://mongo:$(MONGO_INITDB_ROOT_PASSWORD)@mongodb:27017/library_loans?authSource=admin"
+            - name: JWT_SECRET
+              valueFrom: {secretKeyRef: {name: library-secrets, key: JWT_SECRET}}
+            - name: SERVICE_API_KEY
+              valueFrom: {secretKeyRef: {name: library-secrets, key: SERVICE_API_KEY}}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+          readinessProbe:
+            httpGet: {path: /health, port: 3003}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /health, port: 3003}
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {cpu: 500m, memory: 384Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loans-service
+  namespace: library
+spec:
+  selector: {app: loans-service}
+  ports: [{port: 3003, targetPort: 3003}]

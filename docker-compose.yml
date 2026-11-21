@@ -1,0 +1,167 @@
+services:
+  # ─── Databases ─────────────────────────────────────────────────────────────
+  postgres-users:
+    image: postgres:16-alpine
+    container_name: library-postgres-users
+    environment:
+      POSTGRES_DB: library_users
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?défini dans .env}
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_users_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d library_users"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - library-net
+
+  postgres-books:
+    image: postgres:16-alpine
+    container_name: library-postgres-books
+    environment:
+      POSTGRES_DB: library_books
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?défini dans .env}
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_books_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d library_books"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - library-net
+
+  mongodb:
+    image: mongo:7-jammy
+    container_name: library-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:?défini dans .env}
+      MONGO_INITDB_DATABASE: library_loans
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - library-net
+
+  # ─── Microservices ─────────────────────────────────────────────────────────
+  users-service:
+    build:
+      context: ./users-service
+      dockerfile: Dockerfile
+    container_name: library-users-service
+    ports:
+      - "3011:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DB_HOST: postgres-users
+      DB_PORT: 5432
+      DB_NAME: library_users
+      DB_USER: postgres
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?défini dans .env}
+      JWT_EXPIRATION: 1h
+      JWT_REFRESH_EXPIRATION: 7d
+      SERVICE_API_KEY: ${SERVICE_API_KEY:?défini dans .env}
+      CORS_ORIGINS: http://localhost,http://localhost:8080
+    depends_on:
+      postgres-users:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - library-net
+
+  books-service:
+    build:
+      context: ./books-service
+      dockerfile: Dockerfile
+    container_name: library-books-service
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      DB_HOST: postgres-books
+      DB_PORT: 5432
+      DB_NAME: library_books
+      DB_USER: postgres
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?défini dans .env}
+      SERVICE_API_KEY: ${SERVICE_API_KEY:?défini dans .env}
+    depends_on:
+      postgres-books:
+        condition: service_healthy
+    volumes:
+      - books_uploads:/app/uploads
+    restart: unless-stopped
+    networks:
+      - library-net
+
+  loans-service:
+    build:
+      context: ./loans-service
+      dockerfile: Dockerfile
+    container_name: library-loans-service
+    ports:
+      - "3003:3003"
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+      MONGODB_URI: mongodb://mongo:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017/library_loans?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:?défini dans .env}
+      BOOKS_SERVICE_URL: http://books-service:3002
+      USERS_SERVICE_URL: http://users-service:3001
+      SERVICE_API_KEY: ${SERVICE_API_KEY:?défini dans .env}
+      CRON_TIMEZONE: Africa/Tunis
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      books-service:
+        condition: service_started
+      users-service:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - library-net
+
+  # ─── Frontend Web (React + Nginx) ──────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: library-frontend
+    ports:
+      - "80:80"
+      - "8080:80"
+    depends_on:
+      - users-service
+      - books-service
+      - loans-service
+    restart: unless-stopped
+    networks:
+      - library-net
+
+# ─── Networks & Volumes ──────────────────────────────────────────────────────
+networks:
+  library-net:
+    driver: bridge
+
+volumes:
+  postgres_users_data:
+  postgres_books_data:
+  mongodb_data:
+  books_uploads:

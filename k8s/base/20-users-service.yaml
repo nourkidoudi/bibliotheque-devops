@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: users-service
+  namespace: library
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: users-service}
+  template:
+    metadata:
+      labels: {app: users-service}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3001"
+        prometheus.io/path: /metrics
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        fsGroup: 1001
+      containers:
+        - name: users-service
+          image: REGISTRY/users-service:TAG   # remplacé par la CI / ArgoCD (ex. nourkidoudi/users-service:<sha>)
+          imagePullPolicy: IfNotPresent
+          ports: [{containerPort: 3001}]
+          envFrom:
+            - configMapRef: {name: library-config}
+          env:
+            - {name: PORT, value: "3001"}
+            - {name: DB_HOST, value: "postgres-users"}
+            - {name: DB_PORT, value: "5432"}
+            - {name: DB_NAME, value: "library_users"}
+            - {name: DB_USER, value: "postgres"}
+            - name: DB_PASSWORD
+              valueFrom: {secretKeyRef: {name: library-secrets, key: POSTGRES_PASSWORD}}
+            - name: JWT_SECRET
+              valueFrom: {secretKeyRef: {name: library-secrets, key: JWT_SECRET}}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+          readinessProbe:
+            httpGet: {path: /health, port: 3001}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /health, port: 3001}
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {cpu: 500m, memory: 384Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: users-service
+  namespace: library
+spec:
+  selector: {app: users-service}
+  ports: [{port: 3001, targetPort: 3001}]

@@ -1,0 +1,254 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#f5f6f2] text-[#18312f] font-sans;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #edf0eb;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #b2beb7;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #7e9188;
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid #dfe5df;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid #dde4de;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  background: #ffffff;
+  border-color: rgba(62, 119, 108, 0.42);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+}
+
+.glass-input {
+  background: #ffffff;
+  border: 1px solid #d7dfd8;
+  color: #18312f;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.glass-input:focus {
+  border-color: #3e776c;
+  box-shadow: 0 0 0 3px rgba(62, 119, 108, 0.12);
+  outline: none;
+}
+
+.glass-card,
+.glass-panel {
+  color: #18312f;
+}
+
+.glass-card .text-white,
+.glass-panel .text-white,
+.glass-card h1,
+.glass-card h2,
+.glass-card h3,
+.glass-card h4,
+.glass-panel h1,
+.glass-panel h2,
+.glass-panel h3,
+.glass-panel h4 {
+  color: #18312f;
+}
+
+.glass-card .text-slate-300,
+.glass-card .text-slate-400,
+.glass-card .text-slate-500,
+.glass-panel .text-slate-300,
+.glass-panel .text-slate-400,
+.glass-panel .text-slate-500 {
+  color: #71827c;
+}
+
+/* Light Scriptarium theme: consistent across every application page */
+main {
+  background: #f5f6f2;
+  color: #18312f;
+}
+
+main h1,
+main h2,
+main h3,
+main h4,
+main .text-white,
+main .text-slate-100,
+main .text-slate-200,
+main .text-slate-300 {
+  color: #18312f !important;
+}
+
+main .text-slate-400,
+main .text-slate-500,
+main .placeholder-slate-500::placeholder {
+  color: #71827c !important;
+}
+
+main .glass-card,
+main .glass-panel {
+  background: #ffffff;
+  border-color: #dde4de;
+  box-shadow: 0 12px 30px rgba(31, 62, 56, 0.07);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+main .glass-card:hover {
+  background: #ffffff;
+  border-color: #b9c9c1;
+  box-shadow: 0 16px 34px rgba(31, 62, 56, 0.11);
+}
+
+main .bg-slate-800,
+main .bg-slate-800\/80,
+main .bg-slate-800\/60,
+main .bg-slate-800\/30,
+main .bg-slate-900,
+main .bg-slate-900\/40,
+main .bg-slate-900\/60,
+main .bg-slate-900\/90,
+main .bg-slate-950,
+main .bg-indigo-950\/20 {
+  background-color: #edf1ec !important;
+  border-color: #dde4de !important;
+  color: #526660 !important;
+}
+
+main .border-slate-700,
+main .border-slate-800,
+main .border-slate-800\/80,
+main .divide-slate-800\/80 {
+  border-color: #dde4de !important;
+}
+
+main table {
+  background: #ffffff;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+main thead,
+main thead.bg-slate-900\/90 {
+  background: #e9efea !important;
+  color: #526660 !important;
+  border-bottom: 1px solid #d7dfd8 !important;
+}
+
+main tbody tr {
+  background: #ffffff;
+}
+
+main tbody tr:hover {
+  background: #f3f6f2 !important;
+}
+
+main tbody td,
+main th {
+  border-color: #e2e7e2;
+}
+
+main .bg-indigo-600,
+main .from-indigo-600,
+main .via-indigo-500,
+main .to-indigo-700,
+main .hover\:bg-indigo-600:hover,
+main .hover\:from-indigo-500:hover,
+main .hover\:to-indigo-600:hover {
+  background-color: #3e776c !important;
+  background-image: none !important;
+  border-color: #3e776c !important;
+  color: #ffffff !important;
+}
+
+main .text-indigo-400,
+main .text-indigo-300,
+main .text-cyan-400,
+main .text-purple-400 {
+  color: #3e776c !important;
+}
+
+main .text-emerald-400 {
+  color: #43835e !important;
+}
+
+main .text-amber-400 {
+  color: #9a762e !important;
+}
+
+main .text-rose-400 {
+  color: #b45b64 !important;
+}
+
+main .bg-indigo-500\/10,
+main .bg-emerald-500\/10,
+main .bg-amber-500\/10,
+main .bg-rose-500\/10,
+main .bg-cyan-500\/10,
+main .bg-purple-500\/10 {
+  background-color: #edf3ef !important;
+  border-color: #d7e2da !important;
+}
+
+main .border-indigo-500\/40,
+main .border-indigo-500\/30,
+main .border-emerald-500\/30,
+main .border-rose-500\/30 {
+  border-color: #c9d7cf !important;
+}
+
+/* High-contrast text on loan and dashboard cards */
+main .bg-slate-900\/70,
+main .bg-slate-900\/40 {
+  background: #ffffff !important;
+  border: 1px solid #dde4de !important;
+  color: #18312f !important;
+}
+
+main .text-slate-600,
+main .text-slate-700 {
+  color: #657a73 !important;
+}
+
+.dashboard-hero-title,
+.dashboard-hero-title * {
+  color: #f5f2e8 !important;
+}
+
+main .glass-card h1,
+main .glass-card h2,
+main .glass-card h3,
+main .glass-card h4,
+main .glass-card p,
+main .glass-card span {
+  text-shadow: none;
+}
